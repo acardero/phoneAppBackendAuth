@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const upload = require('../configs/multer');
+
 
 const Phone = require('../models/phone-model');
 //import { Phone } from '../models/phone-model';
@@ -18,24 +20,27 @@ router.get('/phones', (req, res, next) => {
     .catch(error => next(error))
   });
 
-  /* CREATE a new Phone. */
-router.post('/phones', (req, res, next) => {
-    const thePhone = new Phone({
-      brand: req.body.brand,
-      name: req.body.name,
-      specs: req.body.specs,
-      image: req.body.image || ''
-    });
-  
-    thePhone.save()
-    .then(thePhone => {
-      res.json({
-        message: 'New Phone created!',
-        id: thePhone._id
-      });
-    })
-    .catch(error => next(error))
+/* CREATE a new Phone. */
+router.post('/', upload.single('file'), function(req, res) {
+  console.log('req.file ', req.file);
+  const phone = new Phone({
+    name: req.body.name,
+    brand: req.body.brand,
+    image: `/uploads/${req.file.filename}`,
+    specs: JSON.parse(req.body.specs) || []
   });
+
+  phone.save((err) => {
+    if (err) {
+      return res.send(err);
+    }
+
+    return res.json({
+      message: 'New Phone created!',
+      phone: phone
+    });
+  });
+});
   
 /* GET a single Phone. */
 router.get('/phones/:id', (req, res, next) => {
