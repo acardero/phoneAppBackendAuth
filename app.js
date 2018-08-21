@@ -9,6 +9,9 @@ const mongoose     = require('mongoose');
 const logger       = require('morgan');
 const path         = require('path');
 const cors         = require('cors');
+const session      = require('express-session');
+const passport     = require('passport');
+
 
 
 mongoose.Promise = Promise;
@@ -22,10 +25,20 @@ mongoose
 
 const app_name = require('./package.json').name;
 const debug = require('debug')(`${app_name}:${path.basename(__filename).split('.')[0]}`);
+const passportSetup = require('./config/passport');
+passportSetup(passport);
 
 const app = express();
 
 // Middleware Setup
+app.use(session({
+  secret: 'angular auth passport secret shh',
+  resave: true,
+  saveUninitialized: true,
+  cookie : { httpOnly: true, maxAge: 2419200000 }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(cors());
 app.use(logger('dev'));
 app.use(bodyParser.json());
@@ -40,8 +53,6 @@ app.use(require('node-sass-middleware')({
   sourceMap: true
 }));
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.ico')));
 
@@ -51,8 +62,10 @@ app.locals.title = 'Express - Generated with IronGenerator';
 // Routes
 const index = require('./routes/index');
 const phonesApi = require('./routes/phones-api');
+const authApi = require('./routes/auth-api');
 app.use('/', index);
 app.use('/api', phonesApi);
+app.use('/', authApi);
 // This will be the default route is nothing else is caught
 app.use(function(req, res) {
   res.sendFile(__dirname + '/public/index.html');

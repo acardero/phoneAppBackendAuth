@@ -18,6 +18,11 @@ const phoneSchema = new mongoose.Schema({
     type: Array,
     default: []
   }
+}, {
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  }
 });
 
 const Phone = mongoose.model('Phone', phoneSchema);
